@@ -1182,6 +1182,16 @@ const CONFIG = {
 /* ═══════════════════════════════════════════════════════
    APPLICATION STATE
    ═══════════════════════════════════════════════════════ */
+/* Updated 배지용 날짜 정리 — 시트의 '2026. 8. 28. 오후 8:35:19' 같은 한글 타임스탬프나
+   '2026-08-28' 등에서 날짜만 뽑아 'Aug 28' 형식으로. 날짜를 못 찾으면 원문 그대로. */
+function formatUpdatedDate(v) {
+  const s = String(v || '').trim();
+  const m = s.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
+  if (!m) return s;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[Number(m[2]) - 1] + ' ' + Number(m[3]);
+}
+
 let allCourses   = [];
 let settings     = {};
 let schedule     = [];     // Array of course objects added to schedule
@@ -1483,7 +1493,7 @@ function renderCard(c) {
   let badges = '';
   if (session) badges += sessionBadge(session);
   if (registerEarly && (registerEarly === 'yes' || registerEarly.includes('high') || registerEarly.includes('demand'))) badges += '<span class="badge badge-early">🔥 High Demand</span>';
-  if (updated) badges += `<span class="badge badge-updated">🔄 ${updated}</span>`;
+  if (updated) badges += `<span class="badge badge-updated">🔄 ${esc(formatUpdatedDate(updated))}</span>`;
   if (period) badges += periodBadge(period);
 
   // Professor display
