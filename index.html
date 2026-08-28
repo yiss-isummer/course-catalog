@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2027 YISS Course Catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   YISS / WAY Dynamic Course Catalogue
+   ───────────────────────────────────────────────────────
+   Theme: Yonsei Blue (unified)
+   Data:  Google Sheets (web-published CSV)
+   
+   To switch programs, edit the CONFIG object below.
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Yonsei Blue Theme ──────────────── */
+  --primary:    #003876;
+  --primary-d:  #002255;
+  --primary-l:  #0052a3;
+  --accent:     #0052a3;
+  --accent-l:   #dbeafe;
+  --accent-ll:  #eff6ff;
+  --gold:       #ffd700;
+  --gold-l:     #fff8d6;
+  --surface:    #f8fafc;
+  --card:       #ffffff;
+  --border:     #e2e8f0;
+  --text:       #1e293b;
+  --text-2:     #64748b;
+  --text-3:     #94a3b8;
+  --success:    #059669;
+  --success-l:  #ecfdf5;
+  --warn:       #d97706;
+  --warn-l:     #fffbeb;
+  --danger:     #dc2626;
+  --danger-l:   #fef2f2;
+  --radius:     10px;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06);
+  --shadow:     0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.12);
+  --font:       'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+  --mono:       'JetBrains Mono', monospace;
+
+  /* ── Session badge colors ─────────── */
+  --badge-4w:       #7c3aed;
+  --badge-4w-bg:    #ede9fe;
+  --badge-6w:       #0891b2;
+  --badge-6w-bg:    #ecfeff;
+  --badge-intern:   #d97706;
+  --badge-intern-bg:#fffbeb;
+  --badge-video:    #6b7280;
+  --badge-video-bg: #f3f4f6;
+  --badge-p1:       #047857;
+  --badge-p1-bg:    #ecfdf5;
+  --badge-p2:       #2563eb;
+  --badge-p2-bg:    #eff6ff;
+  --badge-kli:      #7e22ce;
+  --badge-kli-bg:   #f3e8ff;
+}
+
+/* ══ RESET & BASE ═══════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══ HEADER ═════════════════════════ */
+.site-header {
+  background: linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 50%, var(--primary-l) 100%);
+  color: white;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(91,155,213,0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(212,168,67,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 28px;
+  position: relative;
+  z-index: 1;
+}
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.brand-text h1 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.brand-text .subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.meta-chip {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.meta-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4ade80;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* ── Notice banner ───────────────────── */
+.notice-wrap {
+  max-width: 1280px;
+  margin: 20px auto 0;
+  padding: 0 24px;
+  display: none;
+}
+.notice-wrap.visible { display: block; }
+.notice-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+.notice-banner .notice-icon { flex-shrink: 0; font-size: 15px; }
+
+/* ── Page notes (Important Updates) ── */
+.page-notes {
+  max-width: 1280px;
+  margin: 16px auto 0;
+  padding: 0 24px;
+  display: none;
+}
+.page-notes.visible { display: block; }
+.page-notes-box {
+  background: var(--accent-ll);
+  border: 1px solid var(--accent);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.page-notes-box .pn-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--primary);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ══ CONTROLS BAR ═══════════════════ */
+.controls-bar {
+  max-width: 1280px;
+  margin: 20px auto 0;
+  padding: 0 24px;
+}
+.controls-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+}
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Search */
+.search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.search-wrap .search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s;
+  outline: none;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-3); }
+
+/* Filter selects */
+.filter-select {
+  padding: 9px 32px 9px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") right 10px center no-repeat;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  outline: none;
+  min-width: 130px;
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* Stats / clear */
+.controls-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.course-count {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.course-count strong {
+  color: var(--primary);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+.clear-btn {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+  display: none;
+}
+.clear-btn.visible { display: inline-flex; }
+.clear-btn:hover { background: var(--accent-ll); }
+
+/* ══ MAIN LAYOUT ════════════════════ */
+.main-area {
+  max-width: 1280px;
+  margin: 16px auto 0;
+  padding: 0 24px 60px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.main-area.with-schedule {
+  grid-template-columns: 1fr 440px;
+}
+
+/* ── Course grid ────────────────────── */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+/* ── Course card ────────────────────── */
+.course-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.course-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+.course-card.in-schedule {
+  border-left: 3px solid var(--success);
+}
+
+/* Card header row */
+.cc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cc-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.03em;
+}
+.cc-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.badge-4w     { background: var(--badge-4w-bg);     color: var(--badge-4w); }
+.badge-6w     { background: var(--badge-6w-bg);     color: var(--badge-6w); }
+.badge-intern { background: var(--badge-intern-bg); color: var(--badge-intern); }
+.badge-video  { background: var(--badge-video-bg);  color: var(--badge-video); }
+.badge-p1     { background: var(--badge-p1-bg);     color: var(--badge-p1); }
+.badge-p2     { background: var(--badge-p2-bg);     color: var(--badge-p2); }
+.badge-kli    { background: var(--badge-kli-bg);   color: var(--badge-kli); }
+.badge-early {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  display: flex; align-items: center; gap: 3px;
+}
+.badge-updated {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+}
+
+/* Card title */
+.cc-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* Card details */
+.cc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.cc-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cc-detail-row .icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; }
+.cc-detail-row a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.cc-detail-row a:hover { text-decoration: underline; }
+
+/* Card footer */
+.cc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.field-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--accent-ll);
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+.cc-actions {
+  display: flex;
+  gap: 6px;
+}
+.action-btn {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+.action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-ll);
+}
+.action-btn.schedule-add {
+  border-color: var(--success);
+  color: var(--success);
+}
+.action-btn.schedule-add:hover {
+  background: var(--success-l);
+}
+.action-btn.schedule-remove {
+  background: var(--success-l);
+  border-color: var(--success);
+  color: var(--success);
+}
+.action-btn.schedule-remove:hover {
+  background: var(--danger-l);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ── Schedule panel ─────────────────── */
+.schedule-panel {
+  position: sticky;
+  top: 20px;
+  display: none;
+  align-self: start;
+}
+.main-area.with-schedule .schedule-panel { display: block; }
+
+.panel-card {
+  background: var(--card);
+  border: 2px solid var(--primary);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,56,118,0.12);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.sp-header {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--primary-d), var(--primary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sp-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  display: flex; align-items: center; gap: 6px;
+}
+.sp-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.sp-toggle {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sp-toggle:hover { background: rgba(255,255,255,0.2); }
+
+/* Calendar grid — column-based layout for reliable block positioning */
+.cal-grid { padding: 8px; }
+.cal-container {
+  display: flex;
+  gap: 0;
+}
+.cal-times {
+  width: 44px;
+  flex-shrink: 0;
+}
+.cal-time-slot {
+  height: 30px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-right: 6px;
+  padding-top: 0;
+}
+.cal-columns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  flex: 1;
+}
+.cal-day-col {
+  position: relative;
+}
+.cal-day-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  background: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 0;
+  height: 26px;
+  border-radius: 4px;
+}
+.cal-hour-cell {
+  height: 30px;
+  background: var(--surface);
+  border-radius: 2px;
+  margin-bottom: 2px;
+}
+.cal-block {
+  position: absolute;
+  left: 1px; right: 1px;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  z-index: 2;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+}
+.cal-block:hover { opacity: 0.85; }
+.cal-block.conflict {
+  border-color: var(--danger) !important;
+  animation: conflict-flash 1s ease-in-out infinite;
+}
+@keyframes conflict-flash {
+  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
+  50%     { box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+}
+
+/* Conflict warning */
+.conflict-warning {
+  margin: 12px 12px 8px;
+  padding: 8px 12px;
+  background: var(--danger-l);
+  border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--danger);
+  font-weight: 600;
+  display: none;
+}
+.conflict-warning.visible { display: flex; align-items: center; gap: 6px; }
+
+/* Selected list */
+.sp-list {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 11px;
+}
+.sp-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sp-item-title { font-weight: 600; color: var(--text); }
+.sp-item-time  { color: var(--text-3); font-family: var(--mono); font-size: 10px; }
+.sp-item-remove {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.sp-item-remove:hover { color: var(--danger); background: var(--danger-l); }
+
+.sp-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.sp-credits {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--primary-d), var(--primary-l));
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sp-credits .credit-val {
+  font-family: var(--mono);
+  color: white;
+  font-size: 1.3em;
+  font-weight: 800;
+}
+
+/* ── Loading state ──────────────────── */
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  gap: 16px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* ── Error state ────────────────────── */
+.error-box {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 24px;
+  background: var(--danger-l);
+  border: 1px solid rgba(220,38,38,0.2);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.error-box h3 { color: var(--danger); margin-bottom: 8px; font-size: 15px; }
+.error-box p { color: var(--text-2); font-size: 13px; line-height: 1.6; }
+.error-box code {
+  display: block;
+  margin-top: 12px;
+  padding: 8px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  word-break: break-all;
+}
+
+/* ── No results ─────────────────────── */
+.no-results {
+  grid-column: 1 / -1;
+  padding: 60px 24px;
+  text-align: center;
+}
+.no-results .nr-icon { font-size: 36px; margin-bottom: 12px; }
+.no-results h3 { color: var(--text-2); font-size: 15px; margin-bottom: 4px; }
+.no-results p { color: var(--text-3); font-size: 13px; }
+
+/* ── Footer ─────────────────────────── */
+.site-footer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 24px 40px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.7;
+}
+.site-footer a { color: var(--accent); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* ── Header stats row ───────────────── */
+.header-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.h-stat { text-align: center; }
+.h-stat-value {
+  font-size: 2.2em;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.h-stat-label {
+  font-size: 0.8em;
+  opacity: 0.7;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ══ MOBILE FLOATING SCHEDULE ═══════ */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 20px; right: 20px;
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--primary-d), var(--primary-l));
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+  transition: transform 0.2s;
+}
+.mobile-fab:hover { transform: scale(1.08); }
+.mobile-fab .fab-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+}
+.mobile-fab .fab-badge:empty { display: none; }
+
+.mobile-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1001;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.mobile-overlay.show { opacity: 1; }
+
+.mobile-sheet {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  max-height: 85vh;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  z-index: 1002;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  overflow: hidden;
+  flex-direction: column;
+}
+.mobile-sheet.show { transform: translateY(0); }
+
+.ms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.ms-header h3 {
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.ms-drag {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+}
+.ms-close {
+  width: 32px; height: 32px;
+  border: none;
+  background: var(--surface);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-3);
+}
+.ms-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  max-height: calc(85vh - 70px);
+}
+.ms-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: var(--surface);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.ms-item-info { flex: 1; }
+.ms-item-code {
+  font-family: var(--mono);
+  font-size: 11px; color: var(--text-3);
+}
+.ms-item-title {
+  font-weight: 600; font-size: 13px;
+  margin: 3px 0;
+}
+.ms-item-time {
+  font-size: 12px; color: var(--text-3);
+}
+.ms-item-remove {
+  width: 32px; height: 32px;
+  border: none;
+  background: rgba(220,38,38,0.08);
+  color: var(--danger);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px;
+  transition: background 0.15s;
+}
+.ms-item-remove:hover { background: rgba(220,38,38,0.15); }
+.ms-credits {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--primary-d), var(--primary-l));
+  color: white;
+  border-radius: 14px;
+  margin-top: 12px;
+}
+.ms-credits .label { font-weight: 500; font-size: 14px; }
+.ms-credits .value {
+  font-family: var(--mono);
+  font-size: 1.6em; font-weight: 800;
+}
+.ms-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-3);
+}
+.ms-empty-icon { font-size: 2.5em; margin-bottom: 8px; opacity: 0.5; }
+.ms-conflict {
+  background: var(--danger-l);
+  border: 1px solid rgba(220,38,38,0.2);
+  color: var(--danger);
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: none;
+}
+.ms-conflict.visible { display: block; }
+
+/* ══ RESPONSIVE ═════════════════════ */
+@media (max-width: 900px) {
+  .main-area.with-schedule {
+    grid-template-columns: 1fr;
+  }
+  .schedule-panel { display: none !important; }
+  .mobile-fab,
+  .mobile-overlay,
+  .mobile-sheet { display: block; }
+  .mobile-sheet { display: flex; }
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-wrap { min-width: 0; }
+  .filter-select { width: 100%; }
+  .header-stats { gap: 24px; }
+}
+
+@media (max-width: 600px) {
+  .header-inner { padding: 20px 16px; }
+  .brand-text h1 { font-size: 18px; }
+  .controls-bar, .main-area, .page-notes, .notice-wrap { padding-left: 12px; padding-right: 12px; }
+  .h-stat-value { font-size: 1.8em; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="header-brand">
+        <div class="brand-icon" id="brandIcon">☀️</div>
+        <div class="brand-text">
+          <h1 id="pageTitle">2027 YISS Course Catalogue</h1>
+          <div class="subtitle" id="pageSubtitle">Yonsei International Summer School · Yonsei University</div>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="meta-chip">
+          <div class="meta-dot"></div>
+          <span id="lastUpdated">Loading...</span>
+        </div>
+      </div>
+    </div>
+    <!-- Stats -->
+    <div class="header-stats" id="headerStats">
+      <div class="h-stat">
+        <div class="h-stat-value" id="statTotalCourses">–</div>
+        <div class="h-stat-label">Total Courses</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-value" id="statFields">–</div>
+        <div class="h-stat-label">Academic Fields</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ NOTICE BANNER ══ -->
+<div class="notice-wrap" id="noticeWrap">
+  <div class="notice-banner">
+    <span class="notice-icon">⚠️</span>
+    <span id="noticeBannerText"></span>
+  </div>
+</div>
+
+<!-- ══ PAGE NOTES ══ -->
+<div class="page-notes" id="pageNotes">
+  <div class="page-notes-box">
+    <div class="pn-title">📢 Important Updates</div>
+    <div id="pageNotesContent"></div>
+  </div>
+</div>
+
+<!-- ══ CONTROLS ══ -->
+<div class="controls-bar">
+  <div class="controls-card">
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput"
+          placeholder="Search by course code, title, or professor...">
+      </div>
+      <select class="filter-select" id="fieldFilter">
+        <option value="all">All Fields</option>
+      </select>
+      <!-- Session filter: hidden for WAY, shown for YISS -->
+      <select class="filter-select" id="sessionFilter" style="display:none;">
+        <option value="all">All Sessions</option>
+      </select>
+      <!-- Time of day -->
+      <select class="filter-select" id="timeFilter">
+        <option value="all">All Times</option>
+        <option value="morning">Morning</option>
+        <option value="afternoon">Afternoon</option>
+        <option value="online">Online / Video</option>
+      </select>
+      <!-- Level -->
+      <select class="filter-select" id="levelFilter">
+        <option value="all">All Levels</option>
+        <option value="lower">Lower Division (1xx–2xx)</option>
+        <option value="upper">Upper Division (3xx)</option>
+        <option value="advanced">Advanced (4xx)</option>
+      </select>
+    </div>
+    <div class="controls-bottom">
+      <div class="course-count">
+        Showing <strong id="visibleCount">0</strong> of <strong id="totalCount">0</strong> courses
+      </div>
+      <button class="clear-btn" id="clearBtn" onclick="clearFilters()">✕ Clear filters</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main-area" id="mainArea">
+  <div class="course-grid" id="courseGrid">
+    <div class="loading-overlay" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading course data from server...</div>
+    </div>
+  </div>
+  <!-- Schedule panel (injected by JS if feature enabled) -->
+  <div class="schedule-panel" id="schedulePanel"></div>
+</div>
+
+<!-- ══ MOBILE SCHEDULE ══ -->
+<button class="mobile-fab" id="mobileFab" onclick="toggleMobileSheet()">
+  🗓️
+  <span class="fab-badge" id="fabBadge"></span>
+</button>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSheet()"></div>
+<div class="mobile-sheet" id="mobileSheet">
+  <div class="ms-header">
+    <div style="text-align:center;width:100%;">
+      <div class="ms-drag"></div>
+      <h3>🗓️ My Schedule</h3>
+    </div>
+    <button class="ms-close" onclick="closeMobileSheet()">✕</button>
+  </div>
+  <div class="ms-body">
+    <div class="ms-conflict" id="msConflict">⚠️ Time conflict detected!</div>
+    <div id="msList">
+      <div class="ms-empty">
+        <div class="ms-empty-icon">📚</div>
+        <p>Click "+ Schedule" on a course to add it here.</p>
+      </div>
+    </div>
+    <div class="ms-credits">
+      <span class="label">Total Credits</span>
+      <span class="value" id="msTotalCredits">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer" id="siteFooter">
+  <div>
+    Yonsei International Summer School · Office of International Affairs · Yonsei University<br>
+    <a href="mailto:summer@yonsei.ac.kr">summer@yonsei.ac.kr</a> · 02-2123-3535<br>
+    <span id="footerUpdated"></span>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG — Edit these values to switch programs
+   ═══════════════════════════════════════════════════════ */
+const CONFIG = {
+  /* ── Program identity ──────────────── */
+  program:      'YISS',                          // 'WAY' or 'YISS'
+  title:        '2027 YISS Course Catalogue',
+  subtitle:     'Yonsei International Summer School · Yonsei University',
+  icon:         '☀️',                           // '☀️' for YISS
+  email:        'summer@yonsei.ac.kr',         // 'summer@yonsei.ac.kr' for YISS
+
+  /* ── Google Sheets CSV URLs ────────── *
+   *  Steps to get these URLs:
+   *  1. Open your Google Sheets workbook
+   *  2. File → Share → Publish to web
+   *  3. Select the specific sheet (NOT "Entire Document")
+   *  4. Choose "Comma-separated values (.csv)"
+   *  5. Click Publish → Copy the URL
+   *
+   *  ⚠️ Only publish Course Generator & Settings sheets.
+   *     NEVER publish Responses or Professor List.
+   * ─────────────────────────────────── */
+  coursesUrl:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZVA6GYv89HVdO7h2cJuos8aQ6-ZMDE02b81ACXaRUMkk56TC0AlTfNd0q9uKwQ-z82jcMgVFYGYPZ/pub?gid=1086950016&single=true&output=csv',
+  settingsUrl:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZVA6GYv89HVdO7h2cJuos8aQ6-ZMDE02b81ACXaRUMkk56TC0AlTfNd0q9uKwQ-z82jcMgVFYGYPZ/pub?gid=858583467&single=true&output=csv',
+
+  /* ── CSV column mapping ────────────── *
+   *  Map your Sheet column headers to internal field names.
+   *  Keys = internal name (don't change), Values = exact Sheet header text.
+   * ─────────────────────────────────── */
+  columns: {
+    code:       'Course Code',
+    title:      'Course Title',
+    field:      'Field',
+    professor:  'Professor',
+    profLink:   'Professor Link',
+    university: 'University',
+    credits:    'Credits',
+    session:    'Session',        // '4-Week', '6-Week' — used by YISS
+    period:     'Period',         // 'P1','P2','P3','1A','2A','Online','Video'
+    time:       'Time',           // '09:00~11:30'
+    days:       'Days',           // 'Mon-Thu', 'Mon/Wed/Fri'
+    location:   'Location',
+    mapLink:    'Map Link',
+    registerEarly: 'High Demand', // or 'Register Early'
+    updated:    'Updated',
+    syllabus:   'Syllabus',
+  },
+
+  /* ── Features toggle ───────────────── */
+  features: {
+    sessionFilter:   true,        // true for YISS (4w/6w), false for WAY
+    timeFilter:      true,
+    levelFilter:     true,
+    scheduleBuilder: true,
+    conflictWarning: true,
+  },
+
+  /* ── Period → Time of Day mapping ──── */
+  morningPeriods:    ['P1', 'P2', '1A', 'Period 1'],
+  afternoonPeriods:  ['P3', '2A', 'Period 2', 'KLI'],
+  onlinePeriods:     ['Online', 'Video', 'Video Lecture'],
+
+  /* ── Internship session label ──────── */
+  internshipLabel:   'Internship',
+
+  /* ── Schedule builder colors ───────── */
+  scheduleColors: [
+    { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+    { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+    { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+    { bg: '#fce7f3', border: '#ec4899', text: '#9d174d' },
+    { bg: '#e0e7ff', border: '#6366f1', text: '#3730a3' },
+    { bg: '#ede9fe', border: '#8b5cf6', text: '#5b21b6' },
+    { bg: '#ffedd5', border: '#f97316', text: '#9a3412' },
+    { bg: '#f0fdfa', border: '#14b8a6', text: '#115e59' },
+    { bg: '#fdf2f8', border: '#d946ef', text: '#86198f' },
+  ],
+};
+
+
+/* ═══════════════════════════════════════════════════════
+   APPLICATION STATE
+   ═══════════════════════════════════════════════════════ */
+let allCourses   = [];
+let settings     = {};
+let schedule     = [];     // Array of course objects added to schedule
+let colorIndex   = 0;
+
+
+/* ═══════════════════════════════════════════════════════
+   CSV PARSER (handles quoted fields, newlines in quotes)
+   ═══════════════════════════════════════════════════════ */
+function parseCSV(text) {
+  const rows = [];
+  let current = '';
+  let inQuotes = false;
+  const chars = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (chars[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = false; }
+      } else { current += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { rows.push(current); current = ''; }
+      else if (ch === '\n') { rows.push(current); current = ''; }
+      else { current += ch; }
+    }
+  }
+  if (current) rows.push(current);
+
+  // Reshape flat array into 2D by header count
+  // First, split properly into lines
+  const lines = [];
+  let line = [];
+  let inQ = false;
+  let cell = '';
+  const raw = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (inQ) {
+      if (c === '"') {
+        if (raw[i+1] === '"') { cell += '"'; i++; }
+        else inQ = false;
+      } else { cell += c; }
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { line.push(cell.trim()); cell = ''; }
+      else if (c === '\n') {
+        line.push(cell.trim());
+        if (line.length > 0) lines.push(line);
+        line = [];
+        cell = '';
+      } else { cell += c; }
+    }
+  }
+  line.push(cell.trim());
+  if (line.some(c => c)) lines.push(line);
+
+  if (lines.length < 2) return [];
+
+  const headers = lines[0];
+  const data = [];
+  for (let i = 1; i < lines.length; i++) {
+    const obj = {};
+    headers.forEach((h, j) => {
+      obj[h] = (lines[i][j] || '').trim();
+    });
+    // Skip empty rows
+    if (obj[headers[0]]) data.push(obj);
+  }
+  return data;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS PARSER (key-value pairs from 2-column sheet)
+   ═══════════════════════════════════════════════════════ */
+function parseSettings(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const s = {};
+  for (const line of lines) {
+    const idx = line.indexOf(',');
+    if (idx < 0) continue;
+    const key = line.substring(0, idx).trim().replace(/"/g, '');
+    const val = line.substring(idx + 1).trim().replace(/^"|"$/g, '');
+    if (key) s[key] = val;
+  }
+  return s;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DEMO DATA (used when Google Sheets URLs are not yet configured)
+   Remove this block after setting up real CSV URLs.
+   ═══════════════════════════════════════════════════════ */
+const DEMO_COURSES = [
+  {"Course Code":"WAY3001-01","Course Title":"KOREAN POP CULTURE AND THE KOREAN WAVE","Field":"Korean Studies","Professor":"DOOBO SHIM","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 1","Time":"09:30~12:00","Days":"Mon-Thu","Location":"Samsung Hall B101","Map Link":"","High Demand":"Yes","Updated":"","Syllabus":""},
+  {"Course Code":"WAY2050-01","Course Title":"INTRODUCTION TO KOREAN LANGUAGE 1","Field":"Korean Language","Professor":"MINJUNG KIM","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 1","Time":"09:30~12:00","Days":"Mon-Fri","Location":"Underwood Hall 301","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY2050-02","Course Title":"INTRODUCTION TO KOREAN LANGUAGE 2","Field":"Korean Language","Professor":"SOYOUNG PARK","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 1","Time":"09:30~12:00","Days":"Mon-Fri","Location":"Underwood Hall 302","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY2051-01","Course Title":"INTERMEDIATE KOREAN LANGUAGE","Field":"Korean Language","Professor":"JIAE LEE","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 2","Time":"13:30~16:00","Days":"Mon-Fri","Location":"Underwood Hall 303","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY1010-01","Course Title":"INTRODUCTION TO EAST ASIAN CIVILIZATION","Field":"East Asian Studies","Professor":"HYUNJUNG LEE","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 2","Time":"13:30~16:00","Days":"Mon-Thu","Location":"Samsung Hall B102","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY3020-01","Course Title":"ARTIFICIAL INTELLIGENCE AND SOCIETY","Field":"Science & Technology","Professor":"JUNGWOO PARK","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 1","Time":"09:30~12:00","Days":"Mon-Thu","Location":"Engineering Hall 201","Map Link":"","High Demand":"Yes","Updated":"Jan. 15","Syllabus":""},
+  {"Course Code":"WAY2030-01","Course Title":"PRINCIPLES OF ECONOMICS","Field":"Economics and Management","Professor":"SUNGHOON CHUNG","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 2","Time":"13:30~16:00","Days":"Mon-Thu","Location":"Samsung Hall A201","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY3040-01","Course Title":"COMPARATIVE POLITICS IN EAST ASIA","Field":"Social Sciences","Professor":"MINJAE KIM","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 1","Time":"09:30~12:00","Days":"Mon-Thu","Location":"Baekyang Hall 201","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY1060-01","Course Title":"K-CINEMA: KOREAN FILM AND VISUAL CULTURE","Field":"Korean Studies","Professor":"SEUNGHYUN PARK","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Video","Time":"","Days":"","Location":"Online","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+  {"Course Code":"WAY4010-01","Course Title":"MACHINE LEARNING FUNDAMENTALS","Field":"Science & Technology","Professor":"DONGJIN SONG","Professor Link":"","University":"","Credits":"3","Session":"","Period":"Period 2","Time":"13:30~16:00","Days":"Mon-Thu","Location":"Engineering Hall 301","Map Link":"","High Demand":"","Updated":"","Syllabus":""},
+];
+
+const DEMO_SETTINGS = {
+  pageTitle: '2027 YISS Course Catalogue',
+  pageSubtitle: 'Yonsei International Summer School · Yonsei University',
+  lastUpdated: 'May 21, 2026',
+  noticeBanner: 'Course offerings are subject to change. Please check back regularly for updates.',
+  pageNotes: '📌 WAY2051-01 Intermediate Korean Language — classroom changed to Underwood Hall 303\n📌 Registration opens December 1, 2026',
+};
+
+
+/* ═══════════════════════════════════════════════════════
+   DATA LOADING
+   ═══════════════════════════════════════════════════════ */
+async function loadData() {
+  const grid = document.getElementById('courseGrid');
+  const isDemo = CONFIG.coursesUrl.includes('YOUR_') || CONFIG.coursesUrl === '';
+
+  // Apply theme based on program
+  applyTheme();
+
+  try {
+    if (isDemo) {
+      // ── DEMO MODE ──
+      console.log('%c⚡ DEMO MODE — Using sample data. Configure Google Sheets CSV URLs in CONFIG to use live data.', 'color:#d97706;font-weight:bold;');
+      allCourses = DEMO_COURSES;
+      settings = DEMO_SETTINGS;
+      // Show demo indicator
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#fef3c7;border-bottom:2px solid #f59e0b;padding:8px 16px;text-align:center;font-size:12px;color:#92400e;font-weight:600;font-family:var(--font);';
+      banner.innerHTML = '⚡ DEMO MODE — Showing sample data. <a href="#config" style="color:#1e3a5f;text-decoration:underline;">Set Google Sheets CSV URLs</a> in the CONFIG object to use live data.';
+      document.body.insertBefore(banner, document.body.firstChild);
+    } else {
+      // ── LIVE MODE — Fetch from Google Sheets ──
+      const cacheBust = '&_t=' + Date.now();
+      const courseRes = await fetch(CONFIG.coursesUrl + cacheBust);
+      if (!courseRes.ok) throw new Error(`Course data fetch failed: ${courseRes.status}`);
+      const courseText = await courseRes.text();
+      allCourses = parseCSV(courseText);
+
+      try {
+        const settRes = await fetch(CONFIG.settingsUrl + cacheBust);
+        if (settRes.ok) {
+          const settText = await settRes.text();
+          settings = parseSettings(settText);
+        }
+      } catch (e) {
+        console.warn('Settings sheet not available:', e.message);
+      }
+    }
+
+    // Apply settings
+    applySettings();
+
+    // Build filters
+    buildFieldFilter();
+    if (CONFIG.features.sessionFilter) buildSessionFilter();
+    if (CONFIG.features.scheduleBuilder) initSchedulePanel();
+
+    // Configure visibility
+    document.getElementById('sessionFilter').style.display =
+      CONFIG.features.sessionFilter ? '' : 'none';
+    document.getElementById('timeFilter').style.display =
+      CONFIG.features.timeFilter ? '' : 'none';
+    document.getElementById('levelFilter').style.display =
+      CONFIG.features.levelFilter ? '' : 'none';
+
+    // Remove loading
+    const loader = document.getElementById('loadingState');
+    if (loader) loader.remove();
+
+    // Initial render
+    renderCourses();
+    updateHeaderStats();
+
+  } catch (err) {
+    grid.innerHTML = `
+      <div class="error-box">
+        <h3>⚠️ Unable to load course data</h3>
+        <p>Please check that the Google Sheets CSV URL is correctly configured and the sheet is published to the web.</p>
+        <code>${err.message}</code>
+      </div>`;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   APPLY SETTINGS
+   ═══════════════════════════════════════════════════════ */
+function applySettings() {
+  if (settings.pageTitle) {
+    document.getElementById('pageTitle').textContent = settings.pageTitle;
+    document.title = settings.pageTitle;
+  }
+  if (settings.pageSubtitle) {
+    document.getElementById('pageSubtitle').textContent = settings.pageSubtitle;
+  }
+  if (settings.lastUpdated) {
+    document.getElementById('lastUpdated').textContent = 'Updated: ' + settings.lastUpdated;
+    document.getElementById('footerUpdated').textContent = 'Last updated: ' + settings.lastUpdated;
+  } else {
+    document.getElementById('lastUpdated').textContent = 'Live data';
+  }
+  if (settings.noticeBanner) {
+    document.getElementById('noticeBannerText').textContent = settings.noticeBanner;
+    document.getElementById('noticeWrap').classList.add('visible');
+  }
+  if (settings.pageNotes) {
+    document.getElementById('pageNotesContent').innerHTML =
+      settings.pageNotes.replace(/\n/g, '<br>');
+    document.getElementById('pageNotes').classList.add('visible');
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   FILTER BUILDERS
+   ═══════════════════════════════════════════════════════ */
+function buildFieldFilter() {
+  const col = CONFIG.columns.field;
+  const fields = [...new Set(allCourses.map(c => c[col]).filter(Boolean))].sort();
+  const sel = document.getElementById('fieldFilter');
+  fields.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    sel.appendChild(opt);
+  });
+}
+
+function buildSessionFilter() {
+  const col = CONFIG.columns.session;
+  const sessions = [...new Set(allCourses.map(c => c[col]).filter(Boolean))].sort();
+  const sel = document.getElementById('sessionFilter');
+  sessions.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   COURSE RENDERING
+   ═══════════════════════════════════════════════════════ */
+function renderCourses() {
+  const filtered = getFilteredCourses();
+  const grid = document.getElementById('courseGrid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="no-results">
+        <div class="nr-icon">📭</div>
+        <h3>No courses match your filters</h3>
+        <p>Try adjusting your search or filters.</p>
+      </div>`;
+  } else {
+    grid.innerHTML = filtered.map(c => renderCard(c)).join('');
+  }
+
+  // Update counts
+  document.getElementById('visibleCount').textContent = filtered.length;
+  document.getElementById('totalCount').textContent = allCourses.length;
+
+  // Show/hide clear button
+  const hasFilter = isAnyFilterActive();
+  document.getElementById('clearBtn').classList.toggle('visible', hasFilter);
+}
+
+function renderCard(c) {
+  const col = CONFIG.columns;
+  const code = c[col.code] || '';
+  const title = (c[col.title] || '').replace(/^\*/, '');
+  const field = c[col.field] || '';
+  const prof = c[col.professor] || '';
+  const profLink = c[col.profLink] || '';
+  const credits = c[col.credits] || '3';
+  const session = c[col.session] || '';
+  const period = c[col.period] || '';
+  const time = c[col.time] || '';
+  const days = c[col.days] || '';
+  const location = c[col.location] || '';
+  const mapLink = c[col.mapLink] || '';
+  const registerEarly = (c[col.registerEarly] || '').toLowerCase();
+  const updated = c[col.updated] || '';
+  const syllabus = c[col.syllabus] || '';
+  const isInSchedule = schedule.some(s => s[col.code] === code);
+
+  // Badges
+  let badges = '';
+  if (session) badges += sessionBadge(session);
+  if (registerEarly && (registerEarly === 'yes' || registerEarly.includes('high') || registerEarly.includes('demand'))) badges += '<span class="badge badge-early">🔥 High Demand</span>';
+  if (updated) badges += `<span class="badge badge-updated">🔄 ${updated}</span>`;
+  if (period) badges += periodBadge(period);
+
+  // Professor display
+  const profHtml = profLink
+    ? `<a href="${esc(profLink)}" target="_blank" rel="noopener">${esc(prof)}</a>`
+    : esc(prof);
+
+  // Location display
+  const locHtml = mapLink
+    ? `<a href="${esc(mapLink)}" target="_blank" rel="noopener">${esc(location)}</a>`
+    : esc(location || 'TBA');
+
+  // Schedule button
+  let schedBtn = '';
+  if (CONFIG.features.scheduleBuilder && time && days) {
+    if (isInSchedule) {
+      schedBtn = `<button class="action-btn schedule-remove" onclick="removeFromSchedule('${esc(code)}')">✓ Added</button>`;
+    } else {
+      schedBtn = `<button class="action-btn schedule-add" onclick="addToSchedule('${esc(code)}')">+ Schedule</button>`;
+    }
+  }
+
+  // Syllabus button
+  const syllBtn = syllabus
+    ? `<a class="action-btn" href="${esc(syllabus)}" target="_blank" rel="noopener">📄 Syllabus</a>`
+    : '';
+
+  return `
+    <div class="course-card${isInSchedule ? ' in-schedule' : ''}" data-code="${esc(code)}">
+      <div class="cc-header">
+        <span class="cc-code">${esc(code)}</span>
+        <div class="cc-badges">${badges}</div>
+      </div>
+      <div class="cc-title">${esc(title)}</div>
+      <div class="cc-details">
+        <div class="cc-detail-row"><span class="icon">👤</span>${profHtml}</div>
+        <div class="cc-detail-row"><span class="icon">🕐</span>${esc(days)} · ${esc(time)}</div>
+        <div class="cc-detail-row"><span class="icon">📍</span>${locHtml}</div>
+        <div class="cc-detail-row"><span class="icon">📚</span>${esc(credits)} Credits</div>
+      </div>
+      <div class="cc-footer">
+        <span class="field-chip">${esc(field)}</span>
+        <div class="cc-actions">${syllBtn}${schedBtn}</div>
+      </div>
+    </div>`;
+}
+
+function sessionBadge(session) {
+  if (!session) return '';
+  const s = session.toLowerCase();
+  if (s.includes('4')) return '<span class="badge badge-4w">4-Week</span>';
+  if (s.includes('6')) return '<span class="badge badge-6w">6-Week</span>';
+  if (s.includes('intern') || s.includes('7.5')) return '<span class="badge badge-intern">Internship</span>';
+  return `<span class="badge badge-video">${esc(session)}</span>`;
+}
+
+function periodBadge(period) {
+  if (!period) return '';
+  const p = period.toUpperCase();
+  // "Period 2 (For KLI)" → "Period 2 (For KLI)" 유지, 그 외는 괄호 안 시간 제거
+  const isKLI = p.includes('KLI');
+  const label = isKLI ? period.trim() : period.replace(/\s*\(.*\)/, '').trim();
+
+  if (isKLI) return `<span class="badge badge-kli">${esc(label)}</span>`;
+  if (['ONLINE','VIDEO','PRE-RECORDED'].some(x => p.includes(x))) return `<span class="badge badge-video">${esc(label)}</span>`;
+  if (['P1','1A','PERIOD 1'].some(x => p.includes(x))) return `<span class="badge badge-p1">${esc(label)}</span>`;
+  if (['P3','P2','2A','PERIOD 2'].some(x => p.includes(x))) return `<span class="badge badge-p2">${esc(label)}</span>`;
+  return `<span class="badge badge-video">${esc(label)}</span>`;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   FILTERING
+   ═══════════════════════════════════════════════════════ */
+function getFilteredCourses() {
+  const col = CONFIG.columns;
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const field = document.getElementById('fieldFilter').value;
+  const session = document.getElementById('sessionFilter').value;
+  const timeVal = document.getElementById('timeFilter').value;
+  const level = document.getElementById('levelFilter').value;
+
+  return allCourses.filter(c => {
+    // Search
+    if (search) {
+      const haystack = [c[col.code], c[col.title], c[col.professor]]
+        .join(' ').toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    // Field
+    if (field !== 'all' && c[col.field] !== field) return false;
+    // Session
+    if (CONFIG.features.sessionFilter && session !== 'all') {
+      const cs = (c[col.session] || '').toLowerCase();
+      const fs = session.toLowerCase();
+      // Internship courses show in both 4w and 6w
+      if (cs.includes('intern') || cs.includes('7.5')) { /* always show */ }
+      else if (!cs.includes(fs.replace('-week', ''))) return false;
+    }
+    // Time of day
+    if (timeVal !== 'all') {
+      const period = (c[col.period] || '').toUpperCase();
+      const timeTxt = c[col.time] || '';
+      if (timeVal === 'morning') {
+        const isMorning = CONFIG.morningPeriods.some(p => period.includes(p.toUpperCase()))
+          || (!period && timeTxt && parseStartHour(timeTxt) < 12);
+        if (!isMorning) return false;
+      } else if (timeVal === 'afternoon') {
+        const isAfternoon = CONFIG.afternoonPeriods.some(p => period.includes(p.toUpperCase()))
+          || (!period && timeTxt && parseStartHour(timeTxt) >= 12);
+        if (!isAfternoon) return false;
+      } else if (timeVal === 'online') {
+        const isOnline = CONFIG.onlinePeriods.some(p => period.includes(p.toUpperCase()));
+        if (!isOnline) return false;
+      }
+    }
+    // Level
+    if (level !== 'all') {
+      const num = extractLevelNum(c[col.code] || '');
+      if (level === 'lower' && num > 2) return false;
+      if (level === 'upper' && num !== 3) return false;
+      if (level === 'advanced' && num !== 4) return false;
+    }
+   return true;
+     }).sort(function(a, b) {
+       // 과목명 기준 알파벳순 정렬 (앞의 * 무시)
+       var ta = (a[col.title] || '').replace(/^\*/, '').trim().toUpperCase();
+       var tb = (b[col.title] || '').replace(/^\*/, '').trim().toUpperCase();
+       if (ta < tb) return -1;
+       if (ta > tb) return 1;
+       // 과목명이 같으면 학정코드순 (분반 -01, -02 정렬)
+       var ca = (a[col.code] || '').toUpperCase();
+       var cb = (b[col.code] || '').toUpperCase();
+       return ca < cb ? -1 : ca > cb ? 1 : 0;
+     });
+   }
+
+function parseStartHour(timeStr) {
+  const m = timeStr.match(/(\d{1,2})/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function extractLevelNum(code) {
+  const m = code.match(/[A-Z]+(\d)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function isAnyFilterActive() {
+  return document.getElementById('searchInput').value.trim() !== ''
+    || document.getElementById('fieldFilter').value !== 'all'
+    || document.getElementById('sessionFilter').value !== 'all'
+    || document.getElementById('timeFilter').value !== 'all'
+    || document.getElementById('levelFilter').value !== 'all';
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('fieldFilter').value = 'all';
+  document.getElementById('sessionFilter').value = 'all';
+  document.getElementById('timeFilter').value = 'all';
+  document.getElementById('levelFilter').value = 'all';
+  renderCourses();
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SCHEDULE BUILDER
+   ═══════════════════════════════════════════════════════ */
+function initSchedulePanel() {
+  const panel = document.getElementById('schedulePanel');
+  const mainArea = document.getElementById('mainArea');
+  mainArea.classList.add('with-schedule');
+
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  // 09:00 to 16:00 = 8 hour slots (covers most courses; internship blocks extend beyond if needed)
+  const hours = [9, 10, 11, 12, 13, 14, 15, 16];
+  const CELL_H = 30; // px per hour slot
+  const CELL_GAP = 2;
+  const LABEL_H = 26;
+
+  // Build time labels column
+  let timesHTML = `<div style="height:${LABEL_H}px;"></div>`;
+  hours.forEach(h => {
+    timesHTML += `<div class="cal-time-slot">${String(h).padStart(2,'0')}:00</div>`;
+  });
+
+  // Build day columns
+  let colsHTML = '';
+  dayLabels.forEach((d, di) => {
+    let cells = `<div class="cal-day-label">${d}</div>`;
+    hours.forEach(h => {
+      cells += `<div class="cal-hour-cell"></div>`;
+    });
+    colsHTML += `<div class="cal-day-col" data-day="${di}">${cells}</div>`;
+  });
+
+  const calHTML = `<div class="cal-container">
+    <div class="cal-times">${timesHTML}</div>
+    <div class="cal-columns">${colsHTML}</div>
+  </div>`;
+
+  panel.innerHTML = `
+    <div class="panel-card">
+      <div class="sp-header">
+        <h3>🗓️ My Schedule <span class="sp-count" id="schedCount">0</span></h3>
+        <button class="sp-toggle" id="calToggle" onclick="toggleCalView()">Calendar</button>
+      </div>
+      <div class="conflict-warning" id="conflictWarn">⚠️ Time conflict detected!</div>
+      <div class="cal-grid" id="calGrid">${calHTML}</div>
+      <div class="sp-list" id="schedList">
+        <div class="sp-empty">Click "+ Schedule" on a course card to add it here.</div>
+      </div>
+      <div class="sp-credits">
+        <span>Total Credits</span>
+        <span class="credit-val" id="totalCredits">0</span>
+      </div>
+    </div>`;
+}
+
+function addToSchedule(code) {
+  const col = CONFIG.columns;
+  const course = allCourses.find(c => c[col.code] === code);
+  if (!course || schedule.some(s => s[col.code] === code)) return;
+
+  course._color = CONFIG.scheduleColors[colorIndex % CONFIG.scheduleColors.length];
+  colorIndex++;
+  schedule.push(course);
+  updateScheduleUI();
+  renderCourses();
+}
+
+function removeFromSchedule(code) {
+  const col = CONFIG.columns;
+  schedule = schedule.filter(s => s[col.code] !== code);
+  updateScheduleUI();
+  renderCourses();
+}
+
+function updateScheduleUI() {
+  const col = CONFIG.columns;
+  document.getElementById('schedCount').textContent = schedule.length;
+
+  // Credits
+  const totalCredits = schedule.reduce((sum, c) => sum + (parseFloat(c[col.credits]) || 3), 0);
+  document.getElementById('totalCredits').textContent = totalCredits;
+
+  // List
+  const listEl = document.getElementById('schedList');
+  if (schedule.length === 0) {
+    listEl.innerHTML = '<div class="sp-empty">Click "+ Schedule" on a course card to add it here.</div>';
+  } else {
+    listEl.innerHTML = schedule.map(c => {
+      const title = (c[col.title] || '').replace(/^\*/, '');
+      return `
+        <div class="sp-item">
+          <div class="sp-item-info">
+            <span class="sp-item-title">${esc(title)}</span>
+            <span class="sp-item-time">${esc(c[col.days])} · ${esc(c[col.time])}</span>
+          </div>
+          <button class="sp-item-remove" onclick="removeFromSchedule('${esc(c[col.code])}')">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  // Calendar blocks
+  renderCalendarBlocks();
+
+  // Mobile schedule
+  updateMobileSchedule();
+}
+
+function renderCalendarBlocks() {
+  const col = CONFIG.columns;
+  const CELL_H = 30;  // matches CSS .cal-hour-cell height
+  const CELL_GAP = 2; // matches CSS margin-bottom
+  const LABEL_H = 26; // day label height
+  const START_HOUR = 9;
+  const PX_PER_MIN = (CELL_H + CELL_GAP) / 60;
+
+  // Remove existing blocks
+  document.querySelectorAll('.cal-block').forEach(b => b.remove());
+
+  const slots = [];
+
+  schedule.forEach(c => {
+    const days = parseDays(c[col.days] || '');
+    const [startMin, endMin] = parseTimeRange(c[col.time] || '');
+    if (startMin === null || endMin === null) return;
+
+    const color = c._color || CONFIG.scheduleColors[0];
+    const title = (c[col.title] || '').replace(/^\*/, '');
+
+    days.forEach(dayIdx => {
+      const dayCol = document.querySelector(`.cal-day-col[data-day="${dayIdx}"]`);
+      if (!dayCol) return;
+
+      const topPx = LABEL_H + (startMin - START_HOUR * 60) * PX_PER_MIN;
+      const heightPx = (endMin - startMin) * PX_PER_MIN;
+
+      if (topPx < LABEL_H || heightPx <= 0) return;
+
+      const block = document.createElement('div');
+      block.className = 'cal-block';
+      block.style.cssText = `
+        background: ${color.bg}; border-color: ${color.border}; color: ${color.text};
+        top: ${topPx}px; height: ${heightPx}px;
+      `;
+      block.innerHTML = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(title)}</div>`;
+      block.title = `${title}\n${c[col.days]} · ${c[col.time]}`;
+      dayCol.appendChild(block);
+
+      slots.push({ day: dayIdx, startMin, endMin, code: c[col.code] });
+    });
+  });
+
+  // Check conflicts
+  let hasConflict = false;
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      if (slots[i].day === slots[j].day &&
+          slots[i].startMin < slots[j].endMin &&
+          slots[j].startMin < slots[i].endMin) {
+        hasConflict = true;
+      }
+    }
+  }
+  const conflictEl = document.getElementById('conflictWarn');
+  if (conflictEl) conflictEl.classList.toggle('visible', hasConflict);
+  updateMobileConflict(hasConflict);
+}
+
+function parseDays(dayStr) {
+  const dayMap = { 'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4 };
+  const dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri'];
+
+  // Normalize
+  const s = dayStr.toLowerCase().replace(/\s/g, '');
+
+  // Handle "Mon-Thu" range format
+  if (s.includes('-')) {
+    const parts = s.split('-');
+    const startKey = parts[0].substring(0, 3);
+    const endKey = parts[1].substring(0, 3);
+    const startIdx = dayOrder.indexOf(startKey);
+    const endIdx = dayOrder.indexOf(endKey);
+    if (startIdx >= 0 && endIdx >= 0) {
+      const result = [];
+      for (let i = startIdx; i <= endIdx; i++) result.push(i);
+      return result;
+    }
+  }
+
+  // Handle "Mon/Wed/Fri" slash format
+  if (s.includes('/')) {
+    return s.split('/').map(d => dayMap[d.substring(0, 3)]).filter(d => d !== undefined);
+  }
+
+  // Handle "MonWedFri" concatenated
+  const result = [];
+  for (let i = 0; i < s.length - 2; i++) {
+    const chunk = s.substring(i, i + 3);
+    if (dayMap[chunk] !== undefined && !result.includes(dayMap[chunk])) {
+      result.push(dayMap[chunk]);
+    }
+  }
+  return result;
+}
+
+function parseTimeRange(timeStr) {
+  const m = timeStr.match(/(\d{1,2})[:\.](\d{2})\s*[-~]\s*(\d{1,2})[:\.](\d{2})/);
+  if (!m) return [null, null];
+  return [
+    parseInt(m[1]) * 60 + parseInt(m[2]),
+    parseInt(m[3]) * 60 + parseInt(m[4]),
+  ];
+}
+
+let calViewExpanded = true;
+function toggleCalView() {
+  calViewExpanded = !calViewExpanded;
+  const calGrid = document.getElementById('calGrid');
+  calGrid.style.display = calViewExpanded ? '' : 'none';
+  document.getElementById('calToggle').textContent = calViewExpanded ? 'Calendar' : 'Show Calendar';
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   THEME — Yonsei Blue (unified for YISS & WAY)
+   ═══════════════════════════════════════════════════════ */
+function applyTheme() { /* Yonsei Blue applied via :root defaults */ }
+
+
+/* ═══════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════ */
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   HEADER STATS
+   ═══════════════════════════════════════════════════════ */
+function updateHeaderStats() {
+  const col = CONFIG.columns;
+  document.getElementById('statTotalCourses').textContent = allCourses.length;
+  const fields = new Set(allCourses.map(c => c[col.field]).filter(Boolean));
+  document.getElementById('statFields').textContent = fields.size;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE SCHEDULE SHEET
+   ═══════════════════════════════════════════════════════ */
+let mobileSheetOpen = false;
+
+function toggleMobileSheet() {
+  mobileSheetOpen ? closeMobileSheet() : openMobileSheet();
+}
+
+function openMobileSheet() {
+  const overlay = document.getElementById('mobileOverlay');
+  const sheet = document.getElementById('mobileSheet');
+  overlay.style.display = 'block';
+  sheet.style.display = 'flex';
+  requestAnimationFrame(() => {
+    overlay.classList.add('show');
+    sheet.classList.add('show');
+  });
+  mobileSheetOpen = true;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileSheet() {
+  const overlay = document.getElementById('mobileOverlay');
+  const sheet = document.getElementById('mobileSheet');
+  overlay.classList.remove('show');
+  sheet.classList.remove('show');
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    sheet.style.display = 'none';
+  }, 300);
+  mobileSheetOpen = false;
+  document.body.style.overflow = '';
+}
+
+function updateMobileSchedule() {
+  const col = CONFIG.columns;
+  const badge = document.getElementById('fabBadge');
+  const list = document.getElementById('msList');
+  const creditsEl = document.getElementById('msTotalCredits');
+
+  // Badge
+  badge.textContent = schedule.length > 0 ? schedule.length : '';
+
+  // Credits
+  const totalCredits = schedule.reduce((sum, c) => sum + (parseFloat(c[col.credits]) || 3), 0);
+  creditsEl.textContent = totalCredits;
+
+  // List
+  if (schedule.length === 0) {
+    list.innerHTML = `
+      <div class="ms-empty">
+        <div class="ms-empty-icon">📚</div>
+        <p>Click "+ Schedule" on a course to add it here.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = schedule.map(c => {
+    const title = (c[col.title] || '').replace(/^\*/, '');
+    return `
+      <div class="ms-item">
+        <div class="ms-item-info">
+          <div class="ms-item-code">${esc(c[col.code])}</div>
+          <div class="ms-item-title">${esc(title)}</div>
+          <div class="ms-item-time">⏰ ${esc(c[col.days])} · ${esc(c[col.time])}</div>
+        </div>
+        <button class="ms-item-remove" onclick="removeFromSchedule('${esc(c[col.code])}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function updateMobileConflict(hasConflict) {
+  const el = document.getElementById('msConflict');
+  if (el) el.classList.toggle('visible', hasConflict);
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   EVENT LISTENERS
+   ═══════════════════════════════════════════════════════ */
+document.getElementById('searchInput').addEventListener('input', debounce(renderCourses, 200));
+document.getElementById('fieldFilter').addEventListener('change', renderCourses);
+document.getElementById('sessionFilter').addEventListener('change', renderCourses);
+document.getElementById('timeFilter').addEventListener('change', renderCourses);
+document.getElementById('levelFilter').addEventListener('change', renderCourses);
+
+// Close mobile sheet on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && mobileSheetOpen) closeMobileSheet();
+});
+
+function debounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
