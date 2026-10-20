@@ -1272,15 +1272,25 @@ function parseCSV(text) {
    SETTINGS PARSER (key-value pairs from 2-column sheet)
    ═══════════════════════════════════════════════════════ */
 function parseSettings(text) {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const s = {};
-  for (const line of lines) {
-    const idx = line.indexOf(',');
-    if (idx < 0) continue;
-    const key = line.substring(0, idx).trim().replace(/"/g, '');
-    const val = line.substring(idx + 1).trim().replace(/^"|"$/g, '');
-    if (key) s[key] = val;
+  const raw = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const rows = [];
+  let row = [], cell = '', inQ = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (inQ) {
+      if (c === '"') { if (raw[i + 1] === '"') { cell += '"'; i++; } else inQ = false; }
+      else cell += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
   }
+  row.push(cell); rows.push(row);
+  rows.forEach(r => {
+    const key = (r[0] || '').trim();
+    if (key) s[key] = (r[1] || '').trim();   // A열=키, B열=값만 사용
+  });
   return s;
 }
 
